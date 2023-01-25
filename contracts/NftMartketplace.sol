@@ -45,8 +45,6 @@ contract NftMarketplace is ReentrancyGuard {
     //Seller address --> amount earned
     mapping(address => uint256) private s_proceeds;
 
-    constructor() {}
-
     /////////////////////
     // Modifiers //
     ////////////////////
