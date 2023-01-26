@@ -82,11 +82,76 @@ const { ethers, network, deployments } = require("hardhat");
         it("reverts with error if price is not met", async () => {
           const nftAddress = basicNft.address;
           const tokenId = 0;
-          const price = ethers.utils.parseUnits("1", "ether");
+          const listPrice = ethers.utils.parseUnits("1", "ether");
+          const buyPrice = ethers.utils.parseUnits("0.5", "ether");
           //approve token for listing:
           await basicNft.approve(nftMarketplace.address, tokenId);
           //list token
-          await nftMarketplace.listItem(nftAddress, tokenId, price);
+          await nftMarketplace.listItem(nftAddress, tokenId, listPrice);
+          await expect(
+            nftMarketplace.buyItem(nftAddress, tokenId, { value: buyPrice })
+          ).to.be.revertedWith("NftMarketplace__PriceNotMet");
+        });
+
+        it("gives the proceeds of the selling to the seller", async () => {
+          const nftAddress = basicNft.address;
+          const tokenId = 0;
+          const listPrice = ethers.utils.parseUnits("1", "ether");
+          const buyPrice = ethers.utils.parseUnits("1.1", "ether");
+          //approve token for listing:
+          await basicNft.approve(nftMarketplace.address, tokenId);
+          //list token
+          await nftMarketplace.listItem(nftAddress, tokenId, listPrice);
+          //but token
+          await nftMarketplace.buyItem(nftAddress, tokenId, {
+            value: buyPrice,
+          });
+          const receivedProceeds = (
+            await nftMarketplace.getProceeds(deployer.address)
+          ).toString();
+          assert.equal(receivedProceeds, buyPrice);
+        });
+
+        it("removes listing when token is sold", async () => {
+          const nftAddress = basicNft.address;
+          const tokenId = 0;
+          const listPrice = ethers.utils.parseUnits("1", "ether");
+          const buyPrice = ethers.utils.parseUnits("1.1", "ether");
+          //approve token for listing":
+          await basicNft.approve(nftMarketplace.address, tokenId);
+          //list token
+          await nftMarketplace.listItem(nftAddress, tokenId, listPrice);
+          //buy token
+          await nftMarketplace.buyItem(nftAddress, tokenId, {
+            value: buyPrice,
+          });
+          const listingOfRemovedItem = await nftMarketplace.getListing(
+            nftAddress,
+            tokenId
+          );
+          assert.equal(listingOfRemovedItem.price.toString(), "0");
+          assert.equal(
+            listingOfRemovedItem.seller,
+            "0x0000000000000000000000000000000000000000"
+          );
+        });
+        it("transfers the nft ownership to the buyer", async () => {
+          const nftAddress = basicNft.address;
+          const tokenId = 0;
+          const listPrice = ethers.utils.parseUnits("1", "ether");
+          const buyPrice = ethers.utils.parseUnits("1.1", "ether");
+          const buyer = accounts[1];
+          //approve token for listing
+          await basicNft.approve(nftMarketplace.address, tokenId);
+          //list token
+          await nftMarketplace.listItem(nftAddress, tokenId, listPrice);
+          //buy token
+          const ownerBeforeSelling = await basicNft.ownerOf(tokenId);
+          await nftMarketplace.connect(buyer).buyItem(nftAddress, tokenId, {
+            value: buyPrice,
+          });
+          const ownerAfterSelling = await basicNft.ownerOf(tokenId);
+          assert.equal(ownerAfterSelling, buyer.address);
         });
       });
 
