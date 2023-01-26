@@ -4,7 +4,7 @@ const { verify } = require("../utils/verify");
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deployer } = await getNamedAccounts();
-  const { deploy } = deployments;
+  const { deploy, log } = deployments;
 
   const arguments = [];
 
@@ -12,13 +12,18 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     args: arguments,
     log: true,
-    blockConfirmations: network.config.blockConfirmations || 1,
+    waitConfirmations: network.config.blockConfirmations || 1,
   });
 
   //verify contract if not on local network
-  if (!developmentChains.includes(network.name)) {
-    verify(nftMarketPlaceContract.address, arguments);
+  if (
+    !developmentChains.includes(network.name) &&
+    process.env.ETHERSCAN_API_KEY
+  ) {
+    log("Verifying.....");
+    await verify(nftMarketPlaceContract.address, arguments);
   }
+  log("-------------------------------------");
 };
 
 module.exports.tags = ["all", "nftmarketplace"];
