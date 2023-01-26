@@ -9,12 +9,15 @@ contract BasicNft is ERC721 {
         "ipfs://bafybeig37ioir76s7mg5oobetncojcm3c3hxasyd4rvid4jqhy4gkaheg4/?filename=0-PUG.json";
     uint256 private s_tokenCounter;
 
+    event Nft_Minted(address owner, uint256 tokenId);
+
     constructor() ERC721("BasicNft", "BNFT") {
         s_tokenCounter = 0;
     }
 
     function mintNft() public {
         _safeMint(msg.sender, s_tokenCounter);
+        emit Nft_Minted(msg.sender, s_tokenCounter);
         s_tokenCounter = s_tokenCounter + 1;
     }
 
