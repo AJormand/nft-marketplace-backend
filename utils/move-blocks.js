@@ -21,3 +21,5 @@ async function moveBlocks(amount, sleepAmount = 0) {
     }
   }
 }
+
+module.exports = { moveBlocks, sleep };

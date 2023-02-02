@@ -2,7 +2,8 @@
 //yarn hardhat node
 //yarn hardhat run .\scripts\mint-and-list.js --network localhost
 
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
+const { moveBlocks } = require("../utils/move-blocks");
 
 const PRICE = ethers.utils.parseUnits("0.1", "ether");
 
@@ -27,6 +28,10 @@ async function mintAndList() {
   );
   await listingTx.wait(1);
   console.log("Nft listed!");
+
+  if (network.config.chainId == "31337") {
+    await moveBlocks(2, (sleepAmount = 1000));
+  }
 }
 
 mintAndList()

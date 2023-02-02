@@ -4,13 +4,29 @@ require("dotenv").config();
 
 const frontEndContractFile =
   "../nft-marketplace-client/constants/networkMapping.json";
+const frontendAbiLocation = "../nft-marketplace-client/constants/";
 
 module.exports = async function () {
   if (process.env.UPDATE_FRONT_END) {
     console.log("updating frontend");
     await updateContractAddress();
+    await updateAbi();
   }
 };
+
+async function updateAbi() {
+  const nftMarketplace = await ethers.getContract("NftMarketplace");
+  fs.writeFileSync(
+    `${frontendAbiLocation}NftMarketplace.json`,
+    nftMarketplace.interface.format(ethers.utils.FormatTypes.json)
+  );
+
+  const basicNft = await ethers.getContract("BasicNft");
+  fs.writeFileSync(
+    `${frontendAbiLocation}BasicNft.json`,
+    basicNft.interface.format(ethers.utils.FormatTypes.json)
+  );
+}
 
 async function updateContractAddress() {
   const nftMarketplace = await ethers.getContract("NftMarketplace");
